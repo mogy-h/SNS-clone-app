@@ -31,8 +31,7 @@ const Post: React.FC<PROPS> = (props) => {
             <h3>
               <span className={styles.post_headerUser}>@{props.username}</span>
               <span className={styles.post_headerTime}>
-                {/* {new Date(props.timeStamp!.toDate()).toLocaleString()} */}
-                {props.timeStamp}
+                {new Date(props.timeStamp!.toDate()).toLocaleString()}
               </span>
             </h3>
           </div>

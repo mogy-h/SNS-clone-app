@@ -51,8 +51,6 @@ const Feed: React.FC = () => {
     };
   }, []);
 
-  console.log(posts);
-
   return (
     <div className={styles.feed}>
       <TweetInput />

@@ -48,7 +48,7 @@ const TweetInput: React.FC = () => {
                 avatar: user.photoUrl,
                 image: url,
                 text: tweetMsg,
-                timeStamp: firebase.firestore.FieldValue.serverTimestamp(),
+                timeStamp: firebase.firestore.Timestamp.now(),
                 username: user.displayName,
               });
             });
@@ -59,7 +59,7 @@ const TweetInput: React.FC = () => {
         avatar: user.photoUrl,
         image: "",
         text: tweetMsg,
-        timeStamp: firebase.firestore.FieldValue.serverTimestamp(),
+        timeStamp: firebase.firestore.Timestamp.now(),
         username: user.displayName,
       });
     }
