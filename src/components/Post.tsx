@@ -7,7 +7,9 @@ import { Avatar } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import MessageIcon from "@material-ui/icons/Message";
 import SendIcon from "@material-ui/icons/Send";
-import { PowerInputSharp } from "@material-ui/icons";
+import { Height, PowerInputSharp } from "@material-ui/icons";
+import firebase from "firebase";
+import { doc } from "prettier";
 
 interface PROPS {
   postId: string;
@@ -18,8 +20,72 @@ interface PROPS {
   username: string;
 }
 
+interface COMMENT {
+  id: string;
+  avatar: string;
+  text: string;
+  timeStamp: any;
+  username: string;
+}
+
+const useStyles = makeStyles((theme) => ({
+  small: {
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+    marginRight: theme.spacing(1),
+  },
+}));
+
 const Post: React.FC<PROPS> = (props) => {
-  console.log(props)
+  const classes = useStyles();
+  const user = useSelector(selectUser);
+
+  const [openComments, setOpenComments] = useState(false);
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState<COMMENT[]>([
+    {
+      id: "",
+      avatar: "",
+      text: "",
+      timeStamp: null,
+      username: "",
+    },
+  ]);
+
+  useEffect(() => {
+    const unSub = db
+      .collection("posts")
+      .doc(props.postId)
+      .collection("comments")
+      .orderBy("timeStamp", "desc")
+      .onSnapshot((snapshot) => {
+        console.log(snapshot);
+        setComments(
+          snapshot.docs.map((doc) => ({
+            id: doc.id,
+            avatar: doc.data().text,
+            text: doc.data().text,
+            username: doc.data().username,
+            timeStamp: doc.data().timeStamp,
+          }))
+        );
+      });
+    return () => {
+      unSub();
+    };
+  }, [props.postId]);
+
+  const newComment = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    db.collection("posts").doc(props.postId).collection("comments").add({
+      avatar: user.photoUrl,
+      text: comment,
+      timeStamp: firebase.firestore.Timestamp.now(),
+      username: user.displayName,
+    });
+    setComment("");
+  };
+
   return (
     <div className={styles.post}>
       <div className={styles.post_avatar}>
@@ -43,6 +109,47 @@ const Post: React.FC<PROPS> = (props) => {
           <div className={styles.post_tweetImage}>
             <img src={props.image} alt="tweet" />
           </div>
+        )}
+
+        <MessageIcon
+          className={styles.post_commentIcon}
+          onClick={() => {
+            setOpenComments(!openComments);
+          }}
+        />
+
+        {openComments && (
+          <>
+            {comments.map((com) => (
+              <div key={com.id} className={styles.post_comment}>
+                <Avatar className={classes.small} src={com.avatar} />
+                <span className={styles.post_commentUser}> @{com.username} </span>
+                <span className={styles.post_commentText}> {com.text} </span>
+                <span className={styles.post_headerTime}>
+                  {new Date(com.timeStamp?.toDate()).toLocaleString()}
+                </span>
+              </div>
+            ))}
+
+            <form onSubmit={newComment}>
+              <div className={styles.post_form}>
+                <input
+                  className={styles.post_input}
+                  type="text"
+                  placeholder="type new comment..."
+                  value={comment}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComment(e.target.value)}
+                />
+                <button
+                  disabled={!comment}
+                  className={comment ? styles.post_button : styles.post_buttonDisable}
+                  type="submit"
+                >
+                  <SendIcon className={styles.post_sendIcon} />
+                </button>
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>
